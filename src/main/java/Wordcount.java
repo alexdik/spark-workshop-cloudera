@@ -6,12 +6,24 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 import org.apache.spark.api.java.function.Function2;
-
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Wordcount {
     private static final String IN = "/user/cloudera/wordcount/in";
     private static final String OUT = "/user/cloudera/wordcount/out";
+
+    private static List<String> tokenize(String str) {
+        Pattern pattern = Pattern.compile("\\w+");
+        Matcher matcher = pattern.matcher(str);
+        List<String> tokens = new ArrayList<>();
+        while (matcher.find()) {
+            tokens.add(matcher.group());
+        }
+        return tokens;
+    }
 
     public static void main(String[] args) {
         SparkConf conf = new SparkConf().setAppName("spark-workshop");
@@ -21,7 +33,7 @@ public class Wordcount {
         JavaPairRDD<String, Integer> outputRdd = rdd
             .flatMap(new FlatMapFunction<String, String>() {
                 public Iterable<String> call(String line) {
-                    return Arrays.asList(line.split(" "));
+                    return tokenize(line);
                 }
             })
             .mapToPair(new PairFunction<String, String, Integer>() {
